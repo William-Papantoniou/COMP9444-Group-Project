@@ -11,16 +11,20 @@ glove = GloVe(name='6B', dim=100)
 vocab = glove.stoi  # String-to-index mapping
 
 # Step 1: Load CMU-MOSI dataset and align for all three modalities
-def load_and_align_multimodal_dataset():
-    # Load CMU-MOSI dataset
-    cmumosi_highlevel = mmdatasdk.mmdataset(mmdatasdk.cmu_mosi.highlevel, 'cmumosi/')
-    
-    # Add opinion segment labels for alignment
-    cmumosi_highlevel.add_computational_sequences(mmdatasdk.cmu_mosi.labels, 'cmumosi/')
-    
-    # Align with opinion segment labels
-    cmumosi_highlevel.align('Opinion Segment Labels')
-    
+def load_and_align_multimodal_dataset(dataset_path='cmumosi/'):
+    if not os.path.exists(dataset_path):
+        # Load CMU-MOSI dataset if not already present
+        cmumosi_highlevel = mmdatasdk.mmdataset(mmdatasdk.cmu_mosi.highlevel, dataset_path)
+        
+        # Add opinion segment labels for alignment
+        cmumosi_highlevel.add_computational_sequences(mmdatasdk.cmu_mosi.labels, dataset_path)
+        
+        # Align with opinion segment labels
+        cmumosi_highlevel.align('Opinion Segment Labels')
+    else:
+        print(f"Dataset already exists at {dataset_path}, skipping download and alignment.")
+        cmumosi_highlevel = mmdatasdk.mmdataset(dataset_path)
+
     return cmumosi_highlevel
 
 # Step 2: Preprocess text modality (similar to previous text preprocessing)
