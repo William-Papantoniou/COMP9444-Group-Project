@@ -5,6 +5,7 @@ from torchtext.vocab import GloVe
 from torchtext.data.utils import get_tokenizer
 import numpy as np
 from sklearn.model_selection import train_test_split
+import os
 
 # Pre-trained GloVe embeddings for text
 glove = GloVe(name='6B', dim=100)
@@ -74,63 +75,47 @@ def preprocess_features(features_list, max_len=100):
 
 # Step 4: Prepare dataset for each modality
 def prepare_multimodal_dataset(dataset, max_len=100):
-    """
-    Prepares the dataset for text, audio, and video modalities.
-    
-    Args:
-        dataset: The aligned CMU-MOSI dataset.
-        max_len (int): Maximum number of tokens/time steps per sequence.
-        
-    Returns:
-        Tuple: (text_data, audio_data, video_data, labels)
-    """
-
-    print(dataset.computational_sequences.keys())
-    
-    # Extract the GloVe embeddings, COVAREP (audio), and FACET (video) features
     glove_vectors = dataset.computational_sequences['glove_vectors'].data
     covarep_features = dataset.computational_sequences['COVAREP'].data
     facet_features = dataset.computational_sequences['FACET_4.1'].data
     labels = dataset.computational_sequences['Opinion Segment Labels'].data
 
-    # Extract text, audio, video, and labels for each segment
     texts, audios, videos, label_list = [], [], [], []
 
     for video, segments in glove_vectors.items():
         for segment_id, segment_data in segments.items():
-            print(segment_data)  # Debug print to inspect segment data
-            
-            # Assuming segment_data is a 2D array, convert it to a string if necessary
-            # Example: take mean and convert to string
-            words = " ".join(map(str, np.mean(segment_data, axis=0)))  
-            texts.append(words)  # Store the processed feature as a string
+            # Filter out the 'intervals' and only work with 'features'
+            if segment_id == "features":
+                # Process text features (GloVe embeddings)
+                words = " ".join(map(str, np.mean(segment_data, axis=0)))
+                texts.append(words)
 
-            # Get the audio and video features for the same segment
-            audio_features = covarep_features[video][segment_id]
-            video_features = facet_features[video][segment_id]
-            audios.append(audio_features)
-            videos.append(video_features)
+                # Process audio and video features
+                audio_features = covarep_features[video][segment_id]
+                video_features = facet_features[video][segment_id]
+                audios.append(audio_features)
+                videos.append(video_features)
 
-            # Get the label for the current segment
-            label = labels[video][segment_id]  # Assuming label might be an array
-            label_list.append(label)  # Ensure label is in the right format
+                # Process sentiment labels
+                label = labels[video][segment_id][0]
+                label_list.append(label)
 
-    # Preprocess text
+                print(f"Video: {video}, Segment: {segment_id}, Sentiment: {label}")
+
+    # Preprocess and return the data
     processed_texts = preprocess_text(texts, max_len=max_len)
-    
-    # Preprocess audio and video features
     processed_audios = preprocess_features(audios, max_len=max_len)
     processed_videos = preprocess_features(videos, max_len=max_len)
 
-    return processed_texts, processed_audios, processed_videos
+    return processed_texts, processed_audios, processed_videos, label_list
 
 # Step 5: Load and preprocess dataset
 cmumosi_dataset = load_and_align_multimodal_dataset()
-text_data, audio_data, video_data = prepare_multimodal_dataset(cmumosi_dataset, max_len=100)
+text_data, audio_data, video_data, sentiments = prepare_multimodal_dataset(cmumosi_dataset, max_len=100)
 
 # Split data into training and testing sets (using the same split for all modalities)
-train_text, test_text, train_audio, test_audio, train_video, test_video= train_test_split(
-    text_data, audio_data, video_data, test_size=0.2, random_state=42)
+train_text, test_text, train_audio, test_audio, train_video, test_video, train_sentiments, test_sentiments = train_test_split(
+    text_data, audio_data, video_data, sentiments, test_size=0.2, random_state=42)
 
 # Now we have separate input streams for text, audio, and video ready for the LSTM models.
 
@@ -141,6 +126,8 @@ def print_sample_data(text_data, audio_data, video_data, sample_index=0):
     print(audio_data[sample_index])
     print("\nSample Video Data (Padded):")
     print(video_data[sample_index])
+    print("\nSample Sentiment:")
+    print(sentiments[sample_index])
 
 # Print a sample from the training data
-print_sample_data(train_text, train_audio, train_video, sample_index=0)
+print_sample_data(train_text, train_audio, train_video, sample_index=70)
