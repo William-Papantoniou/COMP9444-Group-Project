@@ -20,3 +20,19 @@ def clean_text(text):
 # Apply cleaning to the 'tweet' column
 data['cleaned_tweet'] = data['tweet'].apply(clean_text)
 print(data)
+
+data['label'] = data['label'].str.strip()
+
+# Define the valid labels
+valid_labels = ['neu', 'neg', 'pos']
+
+# Filter the dataset to keep only rows with valid labels
+filtered_data = data[data['label'].isin(valid_labels)].copy()
+
+# Apply the custom label mapping after filtering
+label_mapping = {'neu': 0, 'neg': -1, 'pos': 1}
+filtered_data['encoded_label'] = filtered_data['label'].map(label_mapping)
+
+# Print the first few rows of the filtered data
+print("--------")
+print(filtered_data)
