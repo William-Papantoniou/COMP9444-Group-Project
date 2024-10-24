@@ -1,0 +1,1 @@
+Dataset URL for the Covid-19 task: https://github.com/usmaann/COVIDSenti
