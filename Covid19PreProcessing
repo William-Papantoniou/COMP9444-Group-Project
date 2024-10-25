@@ -1,8 +1,17 @@
 import pandas as pd
 import re
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from sklearn.model_selection import train_test_split
+from torch.nn.utils.rnn import pad_sequence
+from sklearn.metrics import accuracy_score, classification_report
+from collections import defaultdict
 
 # Load data from the CSV file
-data = pd.read_csv('COVIDSenti/COVIDSenti.csv', header=None, names=['tweet', 'label'], quotechar='"', lineterminator='\n')
+data = pd.read_csv('COVIDSenti.csv', header=None, names=['tweet', 'label'], quotechar='"', lineterminator='\n')
+data = data.iloc[1:].reset_index(drop=True)
 
 # Check the first few rows to ensure it loaded correctly
 print(data.head())
@@ -12,9 +21,12 @@ print("--------")
 # Function to clean the text
 def clean_text(text):
     text = re.sub(r'http\S+', '', text)  # Remove URLs
+    text = re.sub(r'@\S+', '', text)  # Remove @ mentions and the following username
     text = re.sub(r'[^\x00-\x7F]+', '', text)  # Remove special characters and unicode junk
     text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation (optional)
+    text = text.replace('\n', ' ')  # Replace newline characters with a space
     text = text.lower().strip()  # Convert to lowercase and trim whitespaces
+    text = ' '.join(text.split())  # Remove extra spaces between words
     return text
 
 # Apply cleaning to the 'tweet' column
@@ -30,9 +42,195 @@ valid_labels = ['neu', 'neg', 'pos']
 filtered_data = data[data['label'].isin(valid_labels)].copy()
 
 # Apply the custom label mapping after filtering
-label_mapping = {'neu': 0, 'neg': -1, 'pos': 1}
+label_mapping = {'neu': 1, 'neg': 0, 'pos': 2}
 filtered_data['encoded_label'] = filtered_data['label'].map(label_mapping)
 
-# Print the first few rows of the filtered data
 print("--------")
 print(filtered_data)
+print("--------")
+print(filtered_data.iloc[1]['cleaned_tweet'])
+
+## Data setup
+class TweetDataset(Dataset):
+    def __init__(self, texts, labels):
+        self.texts = texts
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        label = self.labels[idx]
+        return text, label
+
+X_train, X_test, y_train, y_test = train_test_split(
+    filtered_data['cleaned_tweet'].values, filtered_data['encoded_label'].values, test_size=0.2, random_state=42
+)
+
+# Create Dataset objects
+train_dataset = TweetDataset(X_train, y_train)
+test_dataset = TweetDataset(X_test, y_test)
+
+# Collate function to pad sequences to the same length
+def collate_fn(batch):
+    texts, labels = zip(*batch)
+    text_indices = [torch.tensor(text_pipeline(text), dtype=torch.long) for text in texts]
+    text_indices_padded = pad_sequence(text_indices, batch_first=True, padding_value=vocab["<PAD>"])
+    return text_indices_padded, torch.tensor(labels, dtype=torch.long)
+
+# Create DataLoader objects
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, collate_fn=collate_fn)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, collate_fn=collate_fn)
+
+## END Datasetup
+
+# Custom vocabulary building
+def build_vocab(sentences):
+    word_to_index = defaultdict(lambda: len(word_to_index))
+    word_to_index["<PAD>"] = 0  # Reserve index 0 for padding
+    word_to_index["<UNK>"] = 1  # Reserve index 1 for unknown words
+    
+    for sentence in sentences:
+        tokens = sentence.split()  # Tokenization
+        for token in tokens:
+            if token not in word_to_index:
+                word_to_index[token] = len(word_to_index)
+    
+    return word_to_index
+
+# Build vocabulary
+vocab = build_vocab(X_train)
+
+# Tokenization function to convert sentence to list of indices
+def text_pipeline(text):
+    return [vocab[token] if token in vocab else vocab["<UNK>"] for token in text.split()]
+
+
+## END Tokeniser
+
+class SentimentModel(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, padding_idx=None):
+        super(SentimentModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=padding_idx)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(hidden_dim * 2, output_dim)  # Bidirectional LSTM doubles hidden_dim
+        self.dropout = nn.Dropout(0.5)
+
+    def forward(self, x):
+        embedded = self.embedding(x)  # Embedding lookup
+        lstm_out, (hidden, _) = self.lstm(embedded)  # LSTM processing
+        # Concatenate final forward and backward hidden states
+        hidden = torch.cat((hidden[-2], hidden[-1]), dim=1)
+        output = self.dropout(hidden)  # Apply dropout
+        output = self.fc(output)  # Fully connected layer for final prediction
+        return output
+
+
+# Training function
+def train_model(model, dataloader, criterion, optimizer, num_epochs=10):
+    model.train()
+    
+    for epoch in range(num_epochs):
+        total_loss = 0
+        correct = 0
+        total = 0
+        
+        for text, label in dataloader:
+            optimizer.zero_grad()
+            
+            # Forward pass
+            output = model(text)
+            
+            # Compute loss
+            loss = criterion(output, label)
+            total_loss += loss.item()
+            
+            # Backward pass and optimization
+            loss.backward()
+            optimizer.step()
+            
+            # Accuracy
+            _, predicted = torch.max(output, 1)
+            correct += (predicted == label).sum().item()
+            total += label.size(0)
+        
+        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(dataloader):.4f}, Accuracy: {100 * correct / total:.2f}%')
+
+# Parameters
+vocab_size = len(vocab)
+embedding_dim = 100
+hidden_dim = 256
+output_dim = 3  # Negative, Neutral, Positive
+padding_idx = vocab["<PAD>"]
+
+num_epochs = 10
+
+# Instantiate model, loss, and optimizer
+model = SentimentModel(vocab_size, embedding_dim, hidden_dim, output_dim, padding_idx)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters())
+
+# Call the training function
+train_model(model, train_loader, criterion, optimizer, num_epochs)
+    
+# Function to evaluate the model
+def evaluate_model(model, test_loader):
+    model.eval()  # Set the model to evaluation mode
+    all_preds = []
+    all_labels = []
+    
+    with torch.no_grad():  # No gradient computation needed during evaluation
+        for text, label in test_loader:
+            output = model(text)
+            _, predicted = torch.max(output, 1)  # Get the index of the max log-probability
+            all_preds.extend(predicted.numpy())  # Store predictions
+            all_labels.extend(label.numpy())  # Store true labels
+
+    return all_labels, all_preds
+
+# Evaluate the model on the test dataset
+true_labels, predicted_labels = evaluate_model(model, test_loader)
+
+# Calculate accuracy
+accuracy = accuracy_score(true_labels, predicted_labels)
+print(f'Accuracy: {accuracy:.4f}')
+
+# Generate a classification report
+print("Classification Report for all data:")
+print(classification_report(true_labels, predicted_labels, target_names=['Negative', 'Neutral', 'Positive']))
+
+
+## Begin classification report for the seperate dataset 
+
+TestingData2 = pd.read_csv('COVIDSenti-A.csv', header=None, names=['tweet', 'label'], quotechar='"', lineterminator='\n')
+TestingData2 = TestingData2.iloc[1:].reset_index(drop=True)
+
+# Apply cleaning to the 'tweet' column
+TestingData2['cleaned_tweet'] = TestingData2['tweet'].apply(clean_text)
+print(data)
+
+TestingData2['label'] = TestingData2['label'].str.strip()
+
+TestingData2filtered_data = TestingData2[TestingData2['label'].isin(valid_labels)].copy()
+
+TestingData2filtered_data['encoded_label'] = TestingData2filtered_data['label'].map(label_mapping)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    TestingData2filtered_data['cleaned_tweet'].values, TestingData2filtered_data['encoded_label'].values, test_size=0.01, random_state=42
+)
+
+test_dataset2 = TweetDataset(X_test, y_test)
+test_loader2 = DataLoader(test_dataset, batch_size=32, shuffle=False, collate_fn=collate_fn)
+
+
+# Evaluate the model on the test dataset
+true_labels2, predicted_labels2 = evaluate_model(model, test_loader2)
+
+# Calculate accuracy
+accuracy = accuracy_score(true_labels2, predicted_labels2)
+print(f'Accuracy: {accuracy:.4f}')
+
+# Generate a classification report
+print("Classification Report for COVIDSenti-A:")
+print(classification_report(true_labels2, predicted_labels2, target_names=['Negative', 'Neutral', 'Positive']))
