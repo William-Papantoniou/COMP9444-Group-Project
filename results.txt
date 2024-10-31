@@ -1,0 +1,75 @@
+Transformer without CUDA only 5 iterations
+PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModel.py"
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\modules\transformer.py:307: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
+  warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
+Epoch 1/5, Loss: 0.4985, Accuracy: 82.07%
+Epoch 2/5, Loss: 0.3452, Accuracy: 87.98%
+Epoch 3/5, Loss: 0.2903, Accuracy: 90.20%
+Epoch 4/5, Loss: 0.2488, Accuracy: 91.63%
+Epoch 5/5, Loss: 0.2169, Accuracy: 92.65%
+Accuracy: 0.9277
+Classification Report for COVIDSenti:
+              precision    recall  f1-score   support
+
+    Negative       0.89      0.88      0.89      3257
+     Neutral       0.96      0.95      0.95     13478
+    Positive       0.74      0.82      0.78      1265
+
+    accuracy                           0.93     18000
+   macro avg       0.86      0.88      0.87     18000
+weighted avg       0.93      0.93      0.93     18000
+
+Tranformer with CUDA 5 iterations
+
+PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModel.py"
+Using device: cuda
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\modules\transformer.py:307: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
+  warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\functional.py:5560: UserWarning: 1Torch was not compiled with flash attention. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\transformers\cuda\sdp_utils.cpp:555.)
+  attn_output = scaled_dot_product_attention(q, k, v, attn_mask, dropout_p, is_causal)
+Epoch 1/5, Loss: 0.5016, Accuracy: 82.02%
+Epoch 2/5, Loss: 0.3517, Accuracy: 87.65%
+Epoch 3/5, Loss: 0.2811, Accuracy: 90.32%
+Epoch 4/5, Loss: 0.2353, Accuracy: 92.08%
+Epoch 5/5, Loss: 0.2041, Accuracy: 93.37%
+Accuracy: 0.9316
+Classification Report for COVIDSenti:
+              precision    recall  f1-score   support
+
+    Negative       0.88      0.90      0.89      3257
+     Neutral       0.97      0.94      0.96     13478
+    Positive       0.75      0.87      0.81      1265
+
+    accuracy                           0.93     18000
+   macro avg       0.87      0.91      0.88     18000
+weighted avg       0.93      0.93      0.93     18000
+
+Tranformer with CUDA 10 iterations
+
+PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModelCudaVersion.py"
+Using device: cuda
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\modules\transformer.py:307: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
+  warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\functional.py:5560: UserWarning: 1Torch was not compiled with flash attention. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\transformers\cuda\sdp_utils.cpp:555.)
+  attn_output = scaled_dot_product_attention(q, k, v, attn_mask, dropout_p, is_causal)
+Epoch 1/10, Loss: 0.5105, Accuracy: 81.80%
+Epoch 2/10, Loss: 0.3642, Accuracy: 87.22%
+Epoch 3/10, Loss: 0.2884, Accuracy: 89.98%
+Epoch 4/10, Loss: 0.2441, Accuracy: 91.59%
+Epoch 5/10, Loss: 0.2137, Accuracy: 92.79%
+Epoch 6/10, Loss: 0.1940, Accuracy: 93.45%
+Epoch 7/10, Loss: 0.1776, Accuracy: 94.21%
+Epoch 8/10, Loss: 0.1637, Accuracy: 94.55%
+Epoch 9/10, Loss: 0.1537, Accuracy: 94.84%
+Epoch 10/10, Loss: 0.1453, Accuracy: 95.17%
+Accuracy: 0.9362
+Classification Report for COVIDSenti:
+              precision    recall  f1-score   support
+
+    Negative       0.89      0.91      0.90      3257
+     Neutral       0.97      0.95      0.96     13478
+    Positive       0.75      0.89      0.81      1265
+
+    accuracy                           0.94     18000
+   macro avg       0.87      0.91      0.89     18000
+weighted avg       0.94      0.94      0.94     18000
