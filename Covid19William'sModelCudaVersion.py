@@ -108,9 +108,9 @@ embedding_dim = 100
 num_heads = 4
 hidden_dim = 256
 output_dim = 3
-num_layers = 2
+num_layers = 4
 padding_idx = vocab["<PAD>"]
-num_epochs = 10
+num_epochs = 50
 
 # Instantiate and train the model
 model = TransformerSentimentModel(
