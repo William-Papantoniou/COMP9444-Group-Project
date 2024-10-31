@@ -56,6 +56,22 @@ accuracy_128_cuda = [
     99.57, 99.64, 99.60, 99.65, 99.61, 99.62, 99.66, 99.63
 ]
 
+epochs_50_cuda_v2 = list(range(1, 51))
+loss_50_cuda_v2 = [
+    0.5496, 0.4240, 0.4066, 0.4066, 0.4146, 0.4436, 0.4113, 0.4031, 0.4358, 0.4140, 
+    0.3946, 0.3824, 0.4083, 0.4203, 0.4259, 0.4344, 0.4359, 0.4274, 0.4620, 0.5469, 
+    0.5774, 0.5410, 0.5776, 0.5923, 0.5337, 0.5169, 0.4977, 0.5175, 0.5091, 0.5123, 
+    0.5223, 0.5219, 0.5661, 0.5499, 0.5580, 0.5847, 0.5780, 0.5786, 0.5823, 0.5718, 
+    0.5900, 0.6015, 0.5852, 0.5759, 0.5805, 0.5947, 0.5953, 0.5933, 0.6062, 0.6064
+]
+accuracy_50_cuda_v2 = [
+    80.58, 85.33, 85.62, 85.42, 84.35, 83.30, 84.89, 85.20, 83.82, 84.58, 
+    85.07, 85.64, 84.65, 84.32, 83.78, 83.14, 83.19, 83.27, 82.42, 77.76, 
+    76.02, 77.51, 76.06, 75.63, 78.72, 79.58, 80.60, 79.53, 80.26, 81.03, 
+    79.36, 79.48, 77.04, 78.63, 77.93, 77.23, 77.39, 77.76, 77.76, 78.57, 
+    77.52, 77.12, 78.02, 78.48, 77.53, 76.48, 76.83, 77.09, 76.55, 76.12
+]
+
 # Create the Loss plot
 p_loss = figure(title="Loss Over Epochs (Interactive)", x_axis_label="Epochs", y_axis_label="Loss", width=700, height=400)
 p_loss.add_tools(HoverTool(tooltips=[("Epoch", "$x"), ("Loss", "$y")]))
@@ -69,6 +85,8 @@ p_loss.line(epochs_10_cuda_v2, loss_10_cuda_v2, legend_label="CUDA (10 Iteration
 p_loss.circle(epochs_10_cuda_v2, loss_10_cuda_v2, color="purple", size=6)
 p_loss.line(epochs_128_cuda, loss_128_cuda, legend_label="CUDA (128 Iterations)", line_width=2, color="orange")
 p_loss.circle(epochs_128_cuda, loss_128_cuda, color="orange", size=6)
+p_loss.line(epochs_50_cuda_v2, loss_50_cuda_v2, legend_label="CUDA (50 Iterations, v2)", line_width=2, color="brown")
+p_loss.circle(epochs_50_cuda_v2, loss_50_cuda_v2, color="brown", size=6)
 
 # Configure the legend for the loss plot
 p_loss.legend.title = "Configurations"
@@ -88,6 +106,8 @@ p_accuracy.line(epochs_10_cuda_v2, accuracy_10_cuda_v2, legend_label="CUDA (10 I
 p_accuracy.circle(epochs_10_cuda_v2, accuracy_10_cuda_v2, color="purple", size=6)
 p_accuracy.line(epochs_128_cuda, accuracy_128_cuda, legend_label="CUDA (128 Iterations)", line_width=2, color="orange")
 p_accuracy.circle(epochs_128_cuda, accuracy_128_cuda, color="orange", size=6)
+p_accuracy.line(epochs_50_cuda_v2, accuracy_50_cuda_v2, legend_label="CUDA (50 Iterations, v2)", line_width=2, color="brown")
+p_accuracy.circle(epochs_50_cuda_v2, accuracy_50_cuda_v2, color="brown", size=6)
 
 # Configure the legend for the accuracy plot
 p_accuracy.legend.title = "Configurations"

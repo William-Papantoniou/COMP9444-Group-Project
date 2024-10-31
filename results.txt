@@ -1,4 +1,4 @@
-Transformer without CUDA only 5 iterations
+Transformer without CUDA only 5 iterations v1
 PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModel.py"
 C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\nn\modules\transformer.py:307: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
   warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
@@ -19,7 +19,7 @@ Classification Report for COVIDSenti:
    macro avg       0.86      0.88      0.87     18000
 weighted avg       0.93      0.93      0.93     18000
 
-Tranformer with CUDA 5 iterations
+Tranformer with CUDA 5 iterations v1
 
 PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModel.py"
 Using device: cuda
@@ -44,7 +44,7 @@ Classification Report for COVIDSenti:
    macro avg       0.87      0.91      0.88     18000
 weighted avg       0.93      0.93      0.93     18000
 
-Tranformer with CUDA 10 iterations
+Tranformer with CUDA 10 iterations v1
 
 PS C:\Users\Rajdeep Singh\Desktop\COMP9444\COMP9444-Group-Project> & "C:/Users/Rajdeep Singh/AppData/Local/Microsoft/WindowsApps/python3.11.exe" "c:/Users/Rajdeep Singh/Desktop/COMP9444/COMP9444-Group-Project/Covid19William'sModelCudaVersion.py"
 Using device: cuda
@@ -73,3 +73,74 @@ Classification Report for COVIDSenti:
     accuracy                           0.94     18000
    macro avg       0.87      0.91      0.89     18000
 weighted avg       0.94      0.94      0.94     18000
+
+Tranformer with CUDA 50 iterations v2
+
+  attn_output = scaled_dot_product_attention(q, k, v, attn_mask, dropout_p, is_causal)
+Epoch 1/50, Loss: 0.5496, Accuracy: 80.58%
+Epoch 2/50, Loss: 0.4240, Accuracy: 85.33%
+Epoch 3/50, Loss: 0.4066, Accuracy: 85.62%
+Epoch 4/50, Loss: 0.4066, Accuracy: 85.42%
+Epoch 5/50, Loss: 0.4146, Accuracy: 84.35%
+Epoch 6/50, Loss: 0.4436, Accuracy: 83.30%
+Epoch 7/50, Loss: 0.4113, Accuracy: 84.89%
+Epoch 8/50, Loss: 0.4031, Accuracy: 85.20%
+Epoch 9/50, Loss: 0.4358, Accuracy: 83.82%
+Epoch 10/50, Loss: 0.4140, Accuracy: 84.58%
+Epoch 11/50, Loss: 0.3946, Accuracy: 85.07%
+Epoch 12/50, Loss: 0.3824, Accuracy: 85.64%
+Epoch 13/50, Loss: 0.4083, Accuracy: 84.65%
+Epoch 14/50, Loss: 0.4203, Accuracy: 84.32%
+Epoch 15/50, Loss: 0.4259, Accuracy: 83.78%
+Epoch 16/50, Loss: 0.4344, Accuracy: 83.14%
+Epoch 17/50, Loss: 0.4359, Accuracy: 83.19%
+Epoch 18/50, Loss: 0.4274, Accuracy: 83.27%
+Epoch 19/50, Loss: 0.4620, Accuracy: 82.42%
+Epoch 20/50, Loss: 0.5469, Accuracy: 77.76%
+Epoch 21/50, Loss: 0.5774, Accuracy: 76.02%
+Epoch 22/50, Loss: 0.5410, Accuracy: 77.51%
+Epoch 23/50, Loss: 0.5776, Accuracy: 76.06%
+Epoch 24/50, Loss: 0.5923, Accuracy: 75.63%
+Epoch 25/50, Loss: 0.5337, Accuracy: 78.72%
+Epoch 26/50, Loss: 0.5169, Accuracy: 79.58%
+Epoch 27/50, Loss: 0.4977, Accuracy: 80.60%
+Epoch 28/50, Loss: 0.5175, Accuracy: 79.53%
+Epoch 29/50, Loss: 0.5091, Accuracy: 80.26%
+Epoch 30/50, Loss: 0.5123, Accuracy: 81.03%
+Epoch 31/50, Loss: 0.5223, Accuracy: 79.36%
+Epoch 32/50, Loss: 0.5219, Accuracy: 79.48%
+Epoch 33/50, Loss: 0.5661, Accuracy: 77.04%
+Epoch 34/50, Loss: 0.5499, Accuracy: 78.63%
+Epoch 35/50, Loss: 0.5580, Accuracy: 77.93%
+Epoch 36/50, Loss: 0.5847, Accuracy: 77.23%
+Epoch 37/50, Loss: 0.5780, Accuracy: 77.39%
+Epoch 38/50, Loss: 0.5786, Accuracy: 77.76%
+Epoch 39/50, Loss: 0.5823, Accuracy: 77.76%
+Epoch 40/50, Loss: 0.5718, Accuracy: 78.57%
+Epoch 41/50, Loss: 0.5900, Accuracy: 77.52%
+Epoch 42/50, Loss: 0.6015, Accuracy: 77.12%
+Epoch 43/50, Loss: 0.5852, Accuracy: 78.02%
+Epoch 44/50, Loss: 0.5759, Accuracy: 78.48%
+Epoch 45/50, Loss: 0.5805, Accuracy: 77.53%
+Epoch 46/50, Loss: 0.5947, Accuracy: 76.48%
+Epoch 47/50, Loss: 0.5953, Accuracy: 76.83%
+Epoch 48/50, Loss: 0.5933, Accuracy: 77.09%
+Epoch 49/50, Loss: 0.6062, Accuracy: 76.55%
+Epoch 50/50, Loss: 0.6064, Accuracy: 76.12%
+Accuracy: 0.7966
+Classification Report for COVIDSenti:
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+C:\Users\Rajdeep Singh\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+              precision    recall  f1-score   support
+
+    Negative       0.69      0.43      0.53      3257
+     Neutral       0.81      0.96      0.88     13478
+    Positive       0.00      0.00      0.00      1265
+
+    accuracy                           0.80     18000
+   macro avg       0.50      0.46      0.47     18000
+weighted avg       0.73      0.80      0.75     18000
