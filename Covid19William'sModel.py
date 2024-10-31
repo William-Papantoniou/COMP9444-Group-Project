@@ -28,19 +28,55 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, collate_fn
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, collate_fn=collate_fn)
 
 # Model Definition
-class SentimentModel(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, padding_idx=None):
-        super(SentimentModel, self).__init__()
+class TransformerSentimentModel(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, num_heads, hidden_dim, output_dim, num_layers, padding_idx=None):
+        super(TransformerSentimentModel, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=padding_idx)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True, bidirectional=True)
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)
+
+        # Define a single Transformer Encoder layer
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=embedding_dim,
+            nhead=num_heads,
+            dim_feedforward=hidden_dim,
+            dropout=0.5
+        )
+
+        # Stack multiple Transformer Encoder layers
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.fc = nn.Linear(embedding_dim, output_dim)
         self.dropout = nn.Dropout(0.5)
+        self.padding_idx = padding_idx
 
     def forward(self, x):
-        embedded = self.embedding(x)
-        lstm_out, (hidden, _) = self.lstm(embedded)
-        hidden = torch.cat((hidden[-2], hidden[-1]), dim=1)
-        output = self.dropout(hidden)
+        # x: [batch_size, seq_len]
+        embedded = self.embedding(x)  # [batch_size, seq_len, embedding_dim]
+
+        # Create padding mask (True for padding tokens)
+        src_key_padding_mask = (x == self.padding_idx)  # [batch_size, seq_len]
+
+        # Permute for Transformer [seq_len, batch_size, embedding_dim]
+        embedded = embedded.permute(1, 0, 2)
+
+        # Apply Transformer Encoder
+        transformer_out = self.transformer_encoder(
+            embedded,
+            src_key_padding_mask=src_key_padding_mask
+        )  # [seq_len, batch_size, embedding_dim]
+
+        # Permute back to [batch_size, seq_len, embedding_dim]
+        transformer_out = transformer_out.permute(1, 0, 2)
+
+        # Create mask for non-padding tokens
+        mask = ~src_key_padding_mask  # [batch_size, seq_len]
+        mask = mask.unsqueeze(2).float()
+
+        # Apply mask and compute mean over non-padded tokens
+        transformer_out = transformer_out * mask
+        lengths = mask.sum(dim=1).clamp(min=1)  # Avoid division by zero
+        pooled = transformer_out.sum(dim=1) / lengths  # [batch_size, embedding_dim]
+
+        # Apply dropout and fully connected layer
+        output = self.dropout(pooled)
         output = self.fc(output)
         return output
 
@@ -64,13 +100,23 @@ def train_model(model, dataloader, criterion, optimizer, num_epochs=10):
 # Parameters
 vocab_size = len(vocab)
 embedding_dim = 100
+num_heads = 4
 hidden_dim = 256
 output_dim = 3
+num_layers = 2
 padding_idx = vocab["<PAD>"]
 num_epochs = 5
 
 # Instantiate and train the model
-model = SentimentModel(vocab_size, embedding_dim, hidden_dim, output_dim, padding_idx)
+model = TransformerSentimentModel(
+    vocab_size=vocab_size,
+    embedding_dim=embedding_dim,
+    num_heads=num_heads,
+    hidden_dim=hidden_dim,
+    output_dim=output_dim,
+    num_layers=num_layers,
+    padding_idx=padding_idx
+)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 train_model(model, train_loader, criterion, optimizer, num_epochs)
