@@ -145,3 +145,53 @@ def preprocess_data(file_path, test_size=0.2, random_state=42):
 
 
 train_dataset, test_dataset, vocab = preprocess_data('COVIDSenti.csv')
+
+
+# Output
+# --- Data Analysis Summary ---
+
+# Label Summary:
+#   Positive %     : 6.98%
+#   Negative %     : 18.15%
+#   Neutral %      : 74.87%
+#   Total Samples  : 90000
+
+# Average Tweet Length per Sentiment:
+#   Neg       : 15.09 words
+#   Neu       : 13.09 words
+#   Pos       : 14.33 words
+
+# Top Words per Sentiment:
+#   Pos:
+#     coronavirus     - 5353 occurrences
+#     virus           - 908 occurrences
+#     corona          - 849 occurrences
+#     china           - 532 occurrences
+#     latest          - 493 occurrences
+#     cases           - 466 occurrences
+#     good            - 446 occurrences
+#     people          - 436 occurrences
+#     many            - 420 occurrences
+#     covid19         - 406 occurrences
+#   Neg:
+#     coronavirus     - 13796 occurrences
+#     virus           - 2465 occurrences
+#     corona          - 2250 occurrences
+#     due             - 1686 occurrences
+#     people          - 1194 occurrences
+#     china           - 1113 occurrences
+#     outbreak        - 857 occurrences
+#     us              - 773 occurrences
+#     covid19         - 762 occurrences
+#     trump           - 754 occurrences
+#   Neu:
+#     coronavirus     - 59363 occurrences
+#     virus           - 7991 occurrences
+#     corona          - 7035 occurrences
+#     china           - 5013 occurrences
+#     covid19         - 4584 occurrences
+#     new             - 4289 occurrences
+#     cases           - 4180 occurrences
+#     us              - 3995 occurrences
+#     via             - 3825 occurrences
+#     outbreak        - 3551 occurrences
