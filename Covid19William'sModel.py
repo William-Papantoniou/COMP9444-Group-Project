@@ -1,25 +1,23 @@
-from collections import defaultdict
+from matplotlib import pyplot as plt
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 import torch.optim as optim
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, classification_report
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from Covid19PrepareData import TweetDataset, preprocess_data, clean_text
+from Covid19PrepareData import preprocess_data
 
 # Load preprocessed data
 train_dataset, test_dataset, vocab = preprocess_data('COVIDSenti.csv')
 
 # Tokenization function
-def text_pipeline(text):
+def vector_assign(text):
     return [vocab[token] if token in vocab else vocab["<UNK>"] for token in text.split()]
 
 # Collate function to pad sequences to the same length
 def collate_fn(batch):
     texts, labels = zip(*batch)
-    text_indices = [torch.tensor(text_pipeline(text), dtype=torch.long) for text in texts]
+    text_indices = [torch.tensor(vector_assign(text), dtype=torch.long) for text in texts]
     text_indices_padded = pad_sequence(text_indices, batch_first=True, padding_value=vocab["<PAD>"])
     return text_indices_padded, torch.tensor(labels, dtype=torch.long)
 
@@ -47,6 +45,8 @@ class SentimentModel(nn.Module):
 # Training function
 def train_model(model, dataloader, criterion, optimizer, num_epochs=10):
     model.train()
+    loss_values = []
+    accuracy_values = []
     for epoch in range(num_epochs):
         total_loss, correct, total = 0, 0, 0
         for text, label in dataloader:
@@ -59,7 +59,14 @@ def train_model(model, dataloader, criterion, optimizer, num_epochs=10):
             _, predicted = torch.max(output, 1)
             correct += (predicted == label).sum().item()
             total += label.size(0)
+
+        avg_loss = total_loss / len(dataloader)
+        accuracy = 100 * correct / total
+        loss_values.append(avg_loss)
+        accuracy_values.append(accuracy)
         print(f'Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(dataloader):.4f}, Accuracy: {100 * correct / total:.2f}%')
+
+    return loss_values, accuracy_values
 
 # Parameters
 vocab_size = len(vocab)
@@ -73,7 +80,7 @@ num_epochs = 5
 model = SentimentModel(vocab_size, embedding_dim, hidden_dim, output_dim, padding_idx)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
-train_model(model, train_loader, criterion, optimizer, num_epochs)
+loss_values, accuracy_values = train_model(model, train_loader, criterion, optimizer, num_epochs)
 
 # Evaluate function
 def evaluate_model(model, dataloader):
@@ -92,3 +99,22 @@ true_labels, predicted_labels = evaluate_model(model, test_loader)
 print(f'Accuracy: {accuracy_score(true_labels, predicted_labels):.4f}')
 print("Classification Report for COVIDSenti:")
 print(classification_report(true_labels, predicted_labels, target_names=['Negative', 'Neutral', 'Positive']))
+
+
+epochs = range(1, num_epochs + 1)
+
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(epochs, loss_values, '-o')
+plt.title('Training Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs, accuracy_values, '-o')
+plt.title('Training Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy (%)')
+
+plt.tight_layout()
+plt.show()

@@ -1,8 +1,11 @@
+from typing import Counter
 import pandas as pd
 import re
 from sklearn.model_selection import train_test_split
 from collections import defaultdict
 from torch.utils.data import Dataset
+from nltk.corpus import stopwords
+import nltk
 
 # Function to clean the text
 def clean_text(text):
@@ -26,6 +29,69 @@ class TweetDataset(Dataset):
     def __getitem__(self, idx):
         return self.texts[idx], self.labels[idx]
 
+## Data anaylisis section
+def word_frequencies(data):
+    nltk.download('stopwords')
+    stop_words = set(stopwords.words('english'))
+    word_counts = {'pos': Counter(), 'neg': Counter(), 'neu': Counter()}
+    
+    for _, row in data.iterrows():
+        label = row['label']
+        words = row['cleaned_tweet'].split()
+        filtered_words = [word for word in words if word not in stop_words]
+        word_counts[label].update(filtered_words)
+
+    top_words = {label: count.most_common(10) for label, count in word_counts.items()}
+    return top_words
+    
+def tweet_length_analysis(data):
+    data['tweet_length'] = data['cleaned_tweet'].apply(lambda x: len(x.split()))
+    avg_length = data.groupby('label')['tweet_length'].mean()
+    return avg_length.to_dict()
+
+
+def analyze_data(data):
+    label_counts = data['label'].value_counts(normalize=True) * 100
+    label_summary = {
+        'Positive %': label_counts.get('pos', 0),
+        'Negative %': label_counts.get('neg', 0),
+        'Neutral %': label_counts.get('neu', 0),
+        'Total Samples': len(data)
+    }
+    
+    avg_tweet_length = tweet_length_analysis(data)
+    word_freqs = word_frequencies(data)
+
+    analysis_summary = {
+        'Label Summary': label_summary,
+        'Average Tweet Length per Sentiment': avg_tweet_length,
+        'Top Words per Sentiment': word_freqs,
+    }
+    
+    return analysis_summary
+
+def print_analysis(analysis_summary):
+    print("\n--- Data Analysis Summary ---\n")
+    
+    print("Label Summary:")
+    for label, value in analysis_summary['Label Summary'].items():
+        if isinstance(value, float):
+            print(f"  {label:<15}: {value:.2f}%")
+        else:
+            print(f"  {label:<15}: {value}")
+    
+    print("\nAverage Tweet Length per Sentiment:")
+    for sentiment, avg_length in analysis_summary['Average Tweet Length per Sentiment'].items():
+        print(f"  {sentiment.capitalize():<10}: {avg_length:.2f} words")
+    
+    print("\nTop Words per Sentiment:")
+    for sentiment, words in analysis_summary['Top Words per Sentiment'].items():
+        print(f"  {sentiment.capitalize()}:")
+        for word, count in words:
+            print(f"    {word:<15} - {count} occurrences")
+
+    print("\n--- End of Summary ---\n")
+
 # Custom vocabulary building
 def build_vocab(sentences):
     word_to_index = defaultdict(lambda: len(word_to_index))
@@ -42,7 +108,6 @@ def build_vocab(sentences):
 
 # Function to preprocess data and return train/test datasets
 def preprocess_data(file_path, test_size=0.2, random_state=42):
-    # Load data
     data = pd.read_csv(file_path, header=None, names=['tweet', 'label'], quotechar='"', lineterminator='\n')
     data = data.iloc[1:].reset_index(drop=True)
     
@@ -55,6 +120,11 @@ def preprocess_data(file_path, test_size=0.2, random_state=42):
     label_mapping = {'neu': 1, 'neg': 0, 'pos': 2}
     filtered_data = data[data['label'].isin(valid_labels)].copy()
     filtered_data['encoded_label'] = filtered_data['label'].map(label_mapping)
+
+    # Analyze the data and print the results
+    if (1 == 1):
+        analysis_results = analyze_data(filtered_data)
+        print_analysis(analysis_results)
     
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(
@@ -72,3 +142,6 @@ def preprocess_data(file_path, test_size=0.2, random_state=42):
     test_dataset = TweetDataset(X_test, y_test)
     
     return train_dataset, test_dataset, vocab
+
+
+train_dataset, test_dataset, vocab = preprocess_data('COVIDSenti.csv')
